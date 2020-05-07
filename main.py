@@ -4,16 +4,22 @@
 
 import math
 import cmath
+import sys
 
 symbols = ('+', '-', '=', '^', 'x', '.')
 splitsymbols = ('+', '-', '=')
-helpMsg = "This app helps to solve equation\n" \
-          "it is still in development and some signs like brackets, '/' and '*' are still unavailable\n" \
-          "if there is not any number after =, that means that equation equals 0\n" \
-          "for example '5x+8-9x^2=' is the same like '5x+8-9x^2=0' "
 
 
-def appendIndex(indl, monomial, isEqPassed):
+def print_complex(comp):
+    comp_print = ''
+    if comp.real == 0:
+        comp_print = '{0}i'.format(comp.imag)
+    else:
+        comp_print = '{0}{1:+}i'.format(comp.real, comp.imag)
+    return comp_print
+
+
+def append_index(indl, monomial, isEqPassed):
     try:
         index = 0.0
         arr_num = 0
@@ -29,7 +35,10 @@ def appendIndex(indl, monomial, isEqPassed):
                 print('error with monomial, the second digit is some special digit')
                 return []
             else:
-                index = 1.0
+                if monomial[0] == '-':
+                    index = -1.0
+                else:
+                    index = 1.0
                 last_float_pos = 1
                 monomial_def = monomial[last_float_pos:]
         else:
@@ -46,7 +55,6 @@ def appendIndex(indl, monomial, isEqPassed):
                     arr_num = 0
                     break
                 count += 1
-
         if isEqPassed:
             index = -index
         # 2 GET A, B OR C IN EQUATION
@@ -67,6 +75,10 @@ def appendIndex(indl, monomial, isEqPassed):
     except ValueError as msg:
         print('error')
         print(msg)
+        return []
+    except IndexError:
+        print('error')
+        return []
 
 
 def is_correct_equation(eq):
@@ -87,16 +99,18 @@ def get_indexes(eq):
         mon = ''
         if this_pos == len(eq) - 1:
             mon = eq[last_monomial_pos:]
-            indexes = appendIndex(indexes, mon, is_eq_pass)
+            indexes = append_index(indexes, mon, is_eq_pass)
             if not indexes:
                 return []
         elif ch in splitsymbols:
+            # if th sign in the begining of equation or after '='
+            if this_pos == 0 or eq[this_pos-1] == '=':
+                this_pos += 1
+                continue
             mon = eq[last_monomial_pos:this_pos]
-            indexes = appendIndex(indexes, mon, is_eq_pass)
+            indexes = append_index(indexes, mon, is_eq_pass)
             if not indexes:
                 return []
-            if indexesa;
-                
             # append indexes
         if ch == '=':
             is_eq_pass = True
@@ -107,29 +121,29 @@ def get_indexes(eq):
     return indexes
 
 
-def solveLinear(indexes):
+def solve_linear(indexes):
     return [-indexes[0] / indexes[1]]
 
 
-def solveQuadratic(indexes):
+def solve_quadratic(indexes):
     a = indexes[2]
     b = indexes[1]
     c = indexes[0]
-    # print("D = b\u00b2 - 4ac")
+    print("D = b\u00b2 - 4ac")
     discriminant = b ** 2 - 4 * a * c
-    # print("D = {0}".format(discriminant))
+    print("D = {0}".format(discriminant))
     if discriminant == 0:
         # print('x = -b / 2a')
         return [-b / (2 * a)]
 
 
     elif discriminant > 0:
-        # print("x = (-b - \u221aD) / 2a")
+        print("x = (-b - \u221aD) / 2a")
         root = math.sqrt(discriminant)
     else:
-        # print("x = (-b - i\u221aD) / 2a")
+        print("x = (-b - i\u221aD) / 2a")
         root = cmath.sqrt(discriminant)
-    return [-b - root / (2 * a), -b + root / (2 * a)]
+    return [(-b - root) / (2 * a), (-b + root) / (2 * a)]
 
 
 def solve_equation(eq):
@@ -146,9 +160,9 @@ def solve_equation(eq):
         print('x \u2208 \u211d')
         return []
     if indexes[2] == 0.0:
-        return solveLinear(indexes)
+        return solve_linear(indexes)
     else:
-        return solveQuadratic(indexes)
+        return solve_quadratic(indexes)
 
 
 def print_results(slist):
@@ -156,17 +170,33 @@ def print_results(slist):
         pass
     else:
         for solve in slist:
-            print('x = ', solve, ' ')
+            if isinstance(solve, complex):
+                print("x =", print_complex(solve))
+            else:
+                print("x =", solve)
 
 
 def main():
-    print("input the equation(quadratic or linear), or input 'help':")
-    eq = input()
-    if eq == 'help':
-        print(helpMsg)
+    print('{0:-^40}'.format("equation_solver"))
+    print('\n\n{0:-^40}\n\n'.format("by Artiom Podgajskij"))
+    eq = ''
+    if len(sys.argv) <= 1:
+        print("input the equations, or /end for finish")
+        while True:
+            eq = input("  ")
+            if eq == '/end':
+                break
+            else:
+                if len(eq.split(' ')) == 1:
+                    solvelist = solve_equation(eq)
+                    print_results(solvelist)
+                    print("\n")
+
     else:
+        eq = sys.argv[1]
         solvelist = solve_equation(eq)
         print_results(solvelist)
+
 
 
 main()
