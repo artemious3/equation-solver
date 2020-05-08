@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # this program divides equation in monomials,
 # finds indexes(like a,b,c in quadratic or linear equation),
 # adds them up and solves with formulas
@@ -9,7 +10,7 @@ import sys
 symbols = ('+', '-', '=', '^', 'x', '.')
 splitsymbols = ('+', '-', '=')
 
-
+#prints complex num
 def print_complex(comp):
     comp_print = ''
     if comp.real == 0:
@@ -18,7 +19,7 @@ def print_complex(comp):
         comp_print = '{0}{1:+}i'.format(comp.real, comp.imag)
     return comp_print
 
-
+# 
 def append_index(indl, monomial, isEqPassed):
     try:
         index = 0.0
@@ -31,29 +32,22 @@ def append_index(indl, monomial, isEqPassed):
             monomial = '+' + monomial
         # if index is missing, index is 1
         if not monomial[1].isdigit():
-            if monomial[1] != 'x':
-                print('error with monomial, the second digit is some special digit')
-                return []
+            if monomial[0] == '-':
+                index = -1.0
             else:
-                if monomial[0] == '-':
-                    index = -1.0
-                else:
-                    index = 1.0
-                last_float_pos = 1
-                monomial_def = monomial[last_float_pos:]
+                index = 1.0
+            monomial_def = monomial[1:]
         else:
             # get index
             count = 0
             for ch in monomial:
-                if ch != '+' and ch != '-' and ch != '.' and not ch.isdigit():
+                if ch not in ('+', '-', '.') and not ch.isdigit():
                     last_float_pos = count
                     index = float(monomial[:last_float_pos])
                     monomial_def = monomial[last_float_pos:]
                     break
-                if count == len(monomial) - 1 and ch.isdigit():
+                if count == len(monomial) - 1:
                     index = float(monomial)
-                    arr_num = 0
-                    break
                 count += 1
         if isEqPassed:
             index = -index
@@ -73,14 +67,10 @@ def append_index(indl, monomial, isEqPassed):
         return indl
     # 4 if index is incorrect
     except ValueError as msg:
-        print('error')
-        print(msg)
-        return []
-    except IndexError:
-        print('error')
+        print('error: ', msg)
         return []
 
-
+# check if the equation is incorrect
 def is_correct_equation(eq):
     for ch in eq:
         if not ch in symbols and not ch.isdigit():
@@ -89,7 +79,7 @@ def is_correct_equation(eq):
         return False
     return True
 
-
+# get indexes for every type of monomial
 def get_indexes(eq):
     indexes = [0.0, 0.0, 0.0, 0.0]
     is_eq_pass = False
@@ -122,7 +112,7 @@ def get_indexes(eq):
 
 
 def solve_linear(indexes):
-    return [-indexes[0] / indexes[1]]
+    return (-indexes[0] / indexes[1],)
 
 
 def solve_quadratic(indexes):
@@ -132,33 +122,32 @@ def solve_quadratic(indexes):
     print("D = b\u00b2 - 4ac")
     discriminant = b ** 2 - 4 * a * c
     print("D = {0}".format(discriminant))
+
     if discriminant == 0:
-        # print('x = -b / 2a')
+        print('x = -b / 2a')
         return [-b / (2 * a)]
-
-
     elif discriminant > 0:
         print("x = (-b - \u221aD) / 2a")
         root = math.sqrt(discriminant)
     else:
         print("x = (-b - i\u221aD) / 2a")
         root = cmath.sqrt(discriminant)
-    return [(-b - root) / (2 * a), (-b + root) / (2 * a)]
+    return ((-b - root) / (2 * a), (-b + root) / (2 * a))
 
 
 def solve_equation(eq):
     if not is_correct_equation(eq):
         print("equation is incorrect")
-        return []
+        return ()
     indexes = get_indexes(eq)
     if not indexes:
-        return []
+        return ()
     if indexes[1] == 0.0 and indexes[2] == 0.0 and indexes[0] != 0.0:
         print('x \u2208 \u2205')
-        return []
+        return ()
     elif indexes[1] == 0.0 and indexes[2] == 0.0 and indexes[0] == 0.0:
         print('x \u2208 \u211d')
-        return []
+        return ()
     if indexes[2] == 0.0:
         return solve_linear(indexes)
     else:
@@ -177,21 +166,24 @@ def print_results(slist):
 
 
 def main():
+    # header text
     print('{0:-^40}'.format("equation_solver"))
     print('\n\n{0:-^40}\n\n'.format("by Artiom Podgajskij"))
     eq = ''
     if len(sys.argv) <= 1:
-        print("input the equations, or /end for finish")
+        print("input the equations, or '/end' (Ctrl + D) for finish")
         while True:
-            eq = input("  ")
-            if eq == '/end':
-                break
-            else:
-                if len(eq.split(' ')) == 1:
-                    solvelist = solve_equation(eq)
-                    print_results(solvelist)
-                    print("\n")
-
+            try:
+                eq = input("  ")
+                if eq == '/end':
+                    break
+                else:
+                    if len(eq.split(' ')) == 1:
+                        solvelist = solve_equation(eq)
+                        print_results(solvelist)
+                        print("\n")
+            except EOFError:
+                break     
     else:
         eq = sys.argv[1]
         solvelist = solve_equation(eq)
